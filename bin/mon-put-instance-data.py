@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__requires__ = 'boto>=2.33.0'
+from cloud_watch_client import *
 
 import argparse
 import boto
@@ -25,20 +25,14 @@ import boto.ec2.autoscale
 import boto.ec2.cloudwatch
 import boto.utils
 import datetime
-import hashlib
 import os
-import pickle
-import pkg_resources
 import random
 import re
 import sys
-import syslog
 import time
 
 CLIENT_NAME = 'CloudWatch-PutInstanceData'
-VERSION = '2.0.0-beta'
-META_DATA_CACHE_DIR = os.environ.get('AWS_EC2CW_META_DATA', '/var/tmp/aws-mon')
-META_DATA_CACHE_TTL = os.environ.get('AWS_EC2CW_META_DATA_TTL', 21600)
+FileCache.CLIENT_NAME = CLIENT_NAME
 
 SIZE_UNITS_CFG = {
     'bytes': {'name': 'Bytes', 'div': 1},
@@ -153,33 +147,6 @@ class Metrics:
                                                  self.units[i],
                                                  self.dimensions[i])
         return ret
-
-
-class FileCache:
-    def __init__(self, fnc):
-        self.fnc = fnc
-        if not os.path.exists(META_DATA_CACHE_DIR):
-            os.makedirs(META_DATA_CACHE_DIR)
-
-    def __call__(self, *args, **kwargs):
-        sig = str(self.fnc.__name__) + ':' + str(args) + ':' + str(kwargs)
-        filename = os.path.join(META_DATA_CACHE_DIR, '{0}-{1}.bin'
-                                .format(CLIENT_NAME,
-                                        hashlib.md5(sig).hexdigest()))
-
-        if os.path.exists(filename):
-            mtime = os.path.getmtime(filename)
-            now = time.time()
-            if mtime + META_DATA_CACHE_TTL > now:
-                with open(filename, 'rb') as f:
-                    return pickle.load(f)
-
-        tmp = self.fnc(*args, **kwargs)
-        with open(filename, 'wb') as f:
-            os.chmod(filename, 0600)
-            pickle.dump(tmp, f)
-
-        return tmp
 
 
 def to_lower(s):
@@ -340,18 +307,12 @@ def add_disk_metrics(args, metrics):
                                disk.mount, disk.file_system)
 
 
-def log_error(message, use_syslog):
-    if use_syslog:
-        syslog.syslog(syslog.LOG_ERR, message)
-    else:
-        print >> sys.stderr, 'ERROR: ' + message
-
-
 def send_metrics(region, metrics, verbose):
     boto_debug = 2 if verbose else 0
 
     # TODO add timeout
     conn = boto.ec2.cloudwatch.connect_to_region(region, debug=boto_debug)
+    
     if not conn:
         raise IOError('Could not establish connection to CloudWatch service')
 
@@ -382,14 +343,6 @@ def get_autoscaling_group(region, instance_id, verbose):
         raise ValueError('Could not find auto-scaling information')
 
     return autoscaling_instances[0].group_name
-
-
-@FileCache
-def get_metadata():
-    metadata = boto.utils.get_instance_metadata(timeout=1, num_retries=2)
-    if not metadata:
-        raise ValueError('Cannot obtain EC2 metadata.')
-    return metadata
 
 
 def validate_args(args):
