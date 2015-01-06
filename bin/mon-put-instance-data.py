@@ -191,8 +191,8 @@ def config_parser():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description='''
-Collects memory, swap, and disk space utilization on an Amazon EC2 instance
-and sends this data as custom metrics to Amazon CloudWatch.''', epilog='''
+  Collects memory, swap, and disk space utilization on an Amazon EC2 instance
+  and sends this data as custom metrics to Amazon CloudWatch.''', epilog='''
 Supported UNITS are bytes, kilobytes, megabytes, and gigabytes.
 
 Examples
