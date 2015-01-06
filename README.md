@@ -60,7 +60,7 @@ If the _--autoscaling_ option is used, this IAM policy is required:
         {
           "Action": [
             "cloudwatch:PutMetricData",
-            "autoscaling:DescribeAutoScalingInstances",
+            "autoscaling:DescribeAutoScalingInstances"
           ],
           "Effect": "Allow",
           "Resource": "*"
