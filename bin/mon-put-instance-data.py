@@ -483,7 +483,7 @@ def main():
             if not args.from_cron:
                 print 'Successfully reported metrics to CloudWatch.'
     except Exception as e:
-        log_error(e.message, args.from_cron)
+        log_error(str(e), args.from_cron)
         return 1
 
     return 0
