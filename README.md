@@ -46,27 +46,15 @@ To get utilization statistics for the last 12 hours
 Configuration
 -------------
 
-To allow an EC2 instance to post metric data to Amazon CloudWatch, this
-IAM policy is required:
+To allow an EC2 instance to read and post metric data to Amazon CloudWatch,
+this IAM policy is required:
 
     {
       "Statement": [
         {
           "Action": [
-            "cloudwatch:PutMetricData"
-          ],
-          "Effect": "Allow",
-          "Resource": "*"
-        }
-      ]
-    }
-
-If the _--autoscaling_ option is used, this IAM policy is required:
-
-    {
-      "Statement": [
-        {
-          "Action": [
+            "cloudwatch:ListMetrics",
+            "cloudwatch:GetMetricStatistics",
             "cloudwatch:PutMetricData",
             "autoscaling:DescribeAutoScalingInstances"
           ],
