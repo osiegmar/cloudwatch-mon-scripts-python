@@ -40,7 +40,7 @@ Report memory and disk space utilization to Amazon CloudWatch
 
 To get utilization statistics for the last 12 hours
 
-    ./mon-get-instance-data.py
+    ./mon-get-instance-data.py --recent-hours=12
 
 
 Configuration
