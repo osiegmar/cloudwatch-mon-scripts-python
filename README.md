@@ -24,7 +24,7 @@ To install the required Boto library, please see [Installing Boto](http://boto.r
     ./cloudwatch-mon-scripts-python-master/bin/mon-put-instance-data.py
 
     ./mon-put-instance-data.py --help
-    ./mon-get-instance-data.py --help
+    ./mon-get-instance-stats.py --help
 
 
 Examples
@@ -40,7 +40,7 @@ Report memory and disk space utilization to Amazon CloudWatch
 
 To get utilization statistics for the last 12 hours
 
-    ./mon-get-instance-data.py --recent-hours=12
+    ./mon-get-instance-stats.py --recent-hours=12
 
 
 Configuration
