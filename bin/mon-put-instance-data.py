@@ -23,7 +23,6 @@ import argparse
 import boto
 import boto.ec2.autoscale
 import boto.ec2.cloudwatch
-import boto.utils
 import datetime
 import os
 import random
