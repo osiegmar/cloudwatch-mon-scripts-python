@@ -55,15 +55,15 @@ class MemData:
 
     @staticmethod
     def __gather_mem_info():
-        meminfo = {}
+        mem_info = {}
         pattern = re.compile(r'^(?P<key>\S*):\s*(?P<value>\d*)\s*kB')
         with open('/proc/meminfo') as f:
             for line in f:
                 match = pattern.match(line)
                 if match:
                     key, value = match.groups(['key', 'value'])
-                    meminfo[key] = int(value) * 1024
-        return meminfo
+                    mem_info[key] = int(value) * 1024
+        return mem_info
 
     def mem_util(self):
         return 100.0 * self.mem_used() / self.mem_total
@@ -99,7 +99,7 @@ class Disk:
 
 class Metrics:
     def __init__(self, instance_id, instance_type, image_id, aggregated,
-                 auto_scaling_group):
+                 autoscaling_group_name):
         self.names = []
         self.units = []
         self.values = []
@@ -108,7 +108,7 @@ class Metrics:
         self.instance_type = instance_type
         self.image_id = image_id
         self.aggregated = aggregated
-        self.auto_scaling_group_name = auto_scaling_group
+        self.autoscaling_group_name = autoscaling_group_name
 
     def add_metric(self, name, unit, value, mount=None, file_system=None):
         common_dims = {}
@@ -122,8 +122,8 @@ class Metrics:
         if self.aggregated != 'only':
             dims.append({'InstanceId': self.instance_id})
 
-        if self.auto_scaling_group_name:
-            dims.append({'AutoScalingGroupName': self.auto_scaling_group_name})
+        if self.autoscaling_group_name:
+            dims.append({'AutoScalingGroupName': self.autoscaling_group_name})
 
         if self.aggregated:
             dims.append({'InstanceType': self.instance_type})
@@ -312,15 +312,15 @@ def send_metrics(region, metrics, verbose):
 
     # TODO add timeout
     conn = boto.ec2.cloudwatch.connect_to_region(region, debug=boto_debug)
-    
+
     if not conn:
         raise IOError('Could not establish connection to CloudWatch service')
 
     response = conn.put_metric_data('System/Linux', metrics.names,
-                                    value=metrics.values,
-                                    timestamp=datetime.datetime.utcnow(),
-                                    unit=metrics.units,
-                                    dimensions=metrics.dimensions)
+                                    metrics.values,
+                                    datetime.datetime.utcnow(),
+                                    metrics.units,
+                                    metrics.dimensions)
 
     if not response:
         raise ValueError('Could not send data to CloudWatch - '
@@ -328,7 +328,7 @@ def send_metrics(region, metrics, verbose):
 
 
 @FileCache
-def get_autoscaling_group(region, instance_id, verbose):
+def get_autoscaling_group_name(region, instance_id, verbose):
     boto_debug = 2 if verbose else 0
 
     # TODO add timeout
@@ -404,19 +404,20 @@ def main():
 
         region = metadata['placement']['availability-zone'][:-1]
         instance_id = metadata['instance-id']
-        autoscaling_group = None
+        autoscaling_group_name = None
         if args.auto_scaling:
-            autoscaling_group = get_autoscaling_group(region, instance_id,
-                                                      args.verbose)
+            autoscaling_group_name = get_autoscaling_group_name(region,
+                                                                instance_id,
+                                                                args.verbose)
 
             if args.verbose:
-                print 'Autoscaling group: ' + autoscaling_group
+                print 'Autoscaling group: ' + autoscaling_group_name
 
         metrics = Metrics(instance_id,
                           metadata['instance-type'],
                           metadata['ami-id'],
                           args.aggregated,
-                          autoscaling_group)
+                          autoscaling_group_name)
 
         if report_mem_data:
             add_memory_metrics(args, metrics)
