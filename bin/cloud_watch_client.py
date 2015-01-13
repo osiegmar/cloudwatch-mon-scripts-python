@@ -15,8 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__requires__ = 'boto>=2.33.0'
-
 import boto
 import boto.ec2.autoscale
 import boto.ec2.cloudwatch
@@ -28,6 +26,8 @@ import pickle
 import sys
 import syslog
 import time
+
+pkg_resources.require('boto>=2.33.0')
 
 VERSION = '2.0.1-beta'
 META_DATA_CACHE_DIR = os.environ.get('AWS_EC2CW_META_DATA', '/var/tmp/aws-mon')
