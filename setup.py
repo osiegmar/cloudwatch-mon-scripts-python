@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from cloudwatchmon.cloud_watch_client import VERSION
+from cloudwatchmon import VERSION
 import os.path
 
 from setuptools import find_packages, setup

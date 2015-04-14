@@ -1,1 +1,1 @@
-__author__ = 'al'
+VERSION = '2.0.3-SNAPSHOT'
