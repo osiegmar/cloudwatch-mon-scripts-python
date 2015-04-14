@@ -27,7 +27,7 @@ requirements_path = os.path.join(os.path.dirname(os.path.normpath(__file__)),
 reqs = parse_requirements(requirements_path)
 
 
-setup(name='cloudwatch-mon-scripts-python',
+setup(name='cloudwatchmon',
       version=VERSION,
       description='Linux monitoring scripts for CloudWatch',
       long_description=readme(),
