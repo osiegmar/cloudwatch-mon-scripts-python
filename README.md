@@ -14,17 +14,13 @@ Requirements
 Installation
 ------------
 
-To install the required Boto library, please see [Installing Boto](http://boto.readthedocs.org/en/latest/getting_started.html#installing-boto).
+Optionally create a virtual environment and activate it. Then just run
+`pip install cloudwatchmon`.
 
-    wget -O cloudwatch-mon-scripts-python.tar.gz \
-        https://github.com/osiegmar/cloudwatch-mon-scripts-python/archive/master.tar.gz
+For script usage, run:
 
-    tar xvfz cloudwatch-mon-scripts-python.tar.gz
-
-    ./cloudwatch-mon-scripts-python-master/bin/mon-put-instance-data.py
-
-    ./mon-put-instance-data.py --help
-    ./mon-get-instance-stats.py --help
+    mon-put-instance-data.py --help
+    mon-get-instance-stats.py --help
 
 
 Examples
@@ -32,15 +28,15 @@ Examples
 
 To perform a simple test run without posting data to Amazon CloudWatch
 
-    ./mon-put-instance-data.py --mem-util --verify --verbose
+    mon-put-instance-data.py --mem-util --verify --verbose
 
 Report memory and disk space utilization to Amazon CloudWatch
 
-    ./mon-put-instance-data.py --mem-util --disk-space-util --disk-path=/
+    mon-put-instance-data.py --mem-util --disk-space-util --disk-path=/
 
 To get utilization statistics for the last 12 hours
 
-    ./mon-get-instance-stats.py --recent-hours=12
+    mon-get-instance-stats.py --recent-hours=12
 
 
 Configuration
