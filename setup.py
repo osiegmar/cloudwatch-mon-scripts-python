@@ -11,6 +11,7 @@ def readme():
         with open(path) as f:
             return f.read()
 
+
 def stripped_reqs(fd):
     return (l.strip() for l in fd)
 
