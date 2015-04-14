@@ -5,3 +5,8 @@ __pycache__/
 # IntelliJ IDEA
 *.iml
 .idea/
+
+# PyPI
+cloudwatchmon.egg-info/
+dist/
+
