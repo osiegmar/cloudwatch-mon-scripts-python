@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from cloud_watch_client import *
+from cloudwatchmon.cloud_watch_client import *
 
 import argparse
 import boto

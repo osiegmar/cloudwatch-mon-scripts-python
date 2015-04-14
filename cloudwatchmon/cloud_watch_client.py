@@ -27,7 +27,7 @@ import time
 
 pkg_resources.require('boto>=2.33.0')
 
-VERSION = '2.0.2-SNAPSHOT'
+VERSION = '2.0.3-SNAPSHOT'
 META_DATA_CACHE_DIR = os.environ.get('AWS_EC2CW_META_DATA', '/tmp/aws-mon')
 META_DATA_CACHE_TTL = os.environ.get('AWS_EC2CW_META_DATA_TTL', 21600)
 
