@@ -20,7 +20,6 @@ Optionally create a virtual environment and activate it. Then just run
 For script usage, run:
 
     mon-put-instance-stats.py --help
-    mon-get-instance-stats.py --help
 
 
 Examples
