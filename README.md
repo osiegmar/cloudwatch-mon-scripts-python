@@ -15,12 +15,11 @@ Installation
 ------------
 
 Optionally create a virtual environment and activate it. Then just run
-`pip install cloudwatchmon`.
+`pip install cloudwatchmon`. Install the scripts in /usr/local/bin folder.
 
 For script usage, run:
 
-    mon-put-instance-data.py --help
-    mon-get-instance-stats.py --help
+    mon-put-instance-stats.py --help
 
 
 Examples
@@ -28,11 +27,11 @@ Examples
 
 To perform a simple test run without posting data to Amazon CloudWatch
 
-    mon-put-instance-data.py --mem-util --verify --verbose
+    mon-put-instance-stats.py --mem-util --verify --verbose
 
 Report memory and disk space utilization to Amazon CloudWatch
 
-    mon-put-instance-data.py --mem-util --disk-space-util --disk-path=/
+    mon-put-instance-stats.py --mem-util --disk-space-util --disk-path=/
 
 To get utilization statistics for the last 12 hours
 
