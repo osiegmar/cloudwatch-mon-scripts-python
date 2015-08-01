@@ -98,8 +98,8 @@ class Disk:
 
 
 class Metrics:
-    def __init__(self, region, instance_id, instance_type, image_id, aggregated,
-                 autoscaling_group_name):
+    def __init__(self, region, instance_id, instance_type, image_id,
+                 aggregated, autoscaling_group_name):
         self.names = []
         self.units = []
         self.values = []
@@ -144,20 +144,22 @@ class Metrics:
         boto_debug = 2 if verbose else 0
 
         # TODO add timeout
-        conn = boto.ec2.cloudwatch.connect_to_region(self.region, debug=boto_debug)
+        conn = boto.ec2.cloudwatch.connect_to_region(self.region,
+                                                     debug=boto_debug)
 
         if not conn:
-            raise IOError('Could not establish connection to CloudWatch service')
-
+            raise IOError('Could not establish connection to CloudWatch')
 
         size = len(self.names)
 
-        for idx in xrange(0, size, AWS_LIMIT_METRICS_SIZE):
-            response = conn.put_metric_data('System/Linux', self.names[idx:idx + AWS_LIMIT_METRICS_SIZE],
-                                            self.values[idx:idx + AWS_LIMIT_METRICS_SIZE],
+        for idx_start in xrange(0, size, AWS_LIMIT_METRICS_SIZE):
+            idx_end = idx_start + AWS_LIMIT_METRICS_SIZE
+            response = conn.put_metric_data('System/Linux',
+                                            self.names[idx_start:idx_end],
+                                            self.values[idx_start:idx_end],
                                             datetime.datetime.utcnow(),
-                                            self.units[idx:idx + AWS_LIMIT_METRICS_SIZE],
-                                            self.dimensions[idx:idx + AWS_LIMIT_METRICS_SIZE])
+                                            self.units[idx_start:idx_end],
+                                            self.dimensions[idx_start:idx_end])
 
             if not response:
                 raise ValueError('Could not send data to CloudWatch - '
@@ -345,6 +347,17 @@ def add_disk_metrics(args, metrics):
                                disk.mount, disk.file_system)
 
 
+def add_static_file_metrics(args, metrics):
+    with open(args.from_file[0]) as f:
+        for line in f.readlines():
+            try:
+                (label, unit, value) = [x.strip() for x in line.split(',')]
+                metrics.add_metric(label, unit, value)
+            except ValueError:
+                print 'Ignore unparseable metric: "' + line + '"'
+                pass
+
+
 @FileCache
 def get_autoscaling_group_name(region, instance_id, verbose):
     boto_debug = 2 if verbose else 0
@@ -353,7 +366,7 @@ def get_autoscaling_group_name(region, instance_id, verbose):
     conn = boto.ec2.autoscale.connect_to_region(region, debug=boto_debug)
 
     if not conn:
-        raise IOError('Could not establish connection to CloudWatch service')
+        raise IOError('Could not establish connection to CloudWatch')
 
     autoscaling_instances = conn.get_all_autoscaling_instances([instance_id])
 
@@ -438,15 +451,8 @@ def main():
                           args.aggregated,
                           autoscaling_group_name)
 
-        # Add metrics from file
         if args.from_file:
-            lines = open(args.from_file[0]).readlines()
-            for line in lines:
-                try:
-                    (label, unit, value) = [x.strip() for x in line.split(',')]
-                    metrics.add_metric(label, unit, value)
-                except:
-                    pass
+            add_static_file_metrics(args, metrics)
 
         if report_mem_data:
             add_memory_metrics(args, metrics)
