@@ -165,12 +165,18 @@ Examples
 
  To perform a simple test run without posting data to Amazon CloudWatch
 
-  ./mon-put-instance-data.py --mem-util --verify --verbose
+  ./put_instance_stats.py --mem-util --verify --verbose
+  or
+  # If installed via pip install cloudwatchmon
+  mon-put-instance-stats.py --mem-util --verify --verbose
 
  To set a five-minute cron schedule to report memory and disk space utilization
  to CloudWatch
 
-  */5 * * * * ~/aws-scripts-mon/mon-put-instance-data.py --mem-util --disk-space-util --disk-path=/ --from-cron
+  */5 * * * * ~/cloudwatchmon/put_instance_stats.py --mem-util --disk-space-util --disk-path=/ --from-cron
+  or
+  # If installed via pip install cloudwatchmon
+  * /5 * * * * /usr/local/bin/mon-put-instance-stats.py --mem-util --disk-space-util --disk-path=/ --from-cron
 
 For more information on how to use this utility, see project home on GitHub:
 https://github.com/osiegmar/cloudwatch-mon-scripts-python
