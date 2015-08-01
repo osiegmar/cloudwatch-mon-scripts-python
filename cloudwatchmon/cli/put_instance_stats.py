@@ -32,6 +32,7 @@ import time
 
 CLIENT_NAME = 'CloudWatch-PutInstanceData'
 FileCache.CLIENT_NAME = CLIENT_NAME
+AWS_LIMIT_METRICS_SIZE = 20
 
 SIZE_UNITS_CFG = {
     'bytes': {'name': 'Bytes', 'div': 1},
@@ -97,12 +98,13 @@ class Disk:
 
 
 class Metrics:
-    def __init__(self, instance_id, instance_type, image_id, aggregated,
+    def __init__(self, region, instance_id, instance_type, image_id, aggregated,
                  autoscaling_group_name):
         self.names = []
         self.units = []
         self.values = []
         self.dimensions = []
+        self.region = region
         self.instance_id = instance_id
         self.instance_type = instance_type
         self.image_id = image_id
@@ -137,6 +139,29 @@ class Metrics:
             self.units.append(unit)
             self.values.append(value)
             self.dimensions.append(dict(common_dims.items() + dim.items()))
+
+    def send(self, verbose):
+        boto_debug = 2 if verbose else 0
+
+        # TODO add timeout
+        conn = boto.ec2.cloudwatch.connect_to_region(self.region, debug=boto_debug)
+
+        if not conn:
+            raise IOError('Could not establish connection to CloudWatch service')
+
+
+        size = len(self.names)
+
+        for idx in xrange(0, size, AWS_LIMIT_METRICS_SIZE):
+            response = conn.put_metric_data('System/Linux', self.names[idx:idx + AWS_LIMIT_METRICS_SIZE],
+                                            self.values[idx:idx + AWS_LIMIT_METRICS_SIZE],
+                                            datetime.datetime.utcnow(),
+                                            self.units[idx:idx + AWS_LIMIT_METRICS_SIZE],
+                                            self.dimensions[idx:idx + AWS_LIMIT_METRICS_SIZE])
+
+            if not response:
+                raise ValueError('Could not send data to CloudWatch - '
+                                 'use --verbose for more information')
 
     def __str__(self):
         ret = ''
@@ -178,9 +203,17 @@ Examples
   # If installed via pip install cloudwatchmon
   * /5 * * * * /usr/local/bin/mon-put-instance-stats.py --mem-util --disk-space-util --disk-path=/ --from-cron
 
+  To report metrics from file
+  mon-put-instance-stats.py --from-file filename.csv
+
 For more information on how to use this utility, see project home on GitHub:
 https://github.com/osiegmar/cloudwatch-mon-scripts-python
     ''')
+
+    parser.add_argument('--from-file',
+                        metavar='FILENAME',
+                        action='append',
+                        help='Add metrics from file, the metrics data must be in csv format (name,unit,value)')
 
     memory_group = parser.add_argument_group('memory metrics')
     memory_group.add_argument('--mem-util',
@@ -312,26 +345,6 @@ def add_disk_metrics(args, metrics):
                                disk.mount, disk.file_system)
 
 
-def send_metrics(region, metrics, verbose):
-    boto_debug = 2 if verbose else 0
-
-    # TODO add timeout
-    conn = boto.ec2.cloudwatch.connect_to_region(region, debug=boto_debug)
-
-    if not conn:
-        raise IOError('Could not establish connection to CloudWatch service')
-
-    response = conn.put_metric_data('System/Linux', metrics.names,
-                                    metrics.values,
-                                    datetime.datetime.utcnow(),
-                                    metrics.units,
-                                    metrics.dimensions)
-
-    if not response:
-        raise ValueError('Could not send data to CloudWatch - '
-                         'use --verbose for more information')
-
-
 @FileCache
 def get_autoscaling_group_name(region, instance_id, verbose):
     boto_debug = 2 if verbose else 0
@@ -370,7 +383,7 @@ def validate_args(args):
         raise ValueError('Metrics to report disk space are provided but '
                          'disk path is not specified.')
 
-    if not report_mem_data and not report_disk_data:
+    if not report_mem_data and not report_disk_data and not args.from_file:
         raise ValueError('No metrics specified for collection and '
                          'submission to CloudWatch.')
 
@@ -418,11 +431,22 @@ def main():
             if args.verbose:
                 print 'Autoscaling group: ' + autoscaling_group_name
 
-        metrics = Metrics(instance_id,
+        metrics = Metrics(region,
+                          instance_id,
                           metadata['instance-type'],
                           metadata['ami-id'],
                           args.aggregated,
                           autoscaling_group_name)
+
+        # Add metrics from file
+        if args.from_file:
+            lines = open(args.from_file[0]).readlines()
+            for line in lines:
+                try:
+                    (label, unit, value) = [x.strip() for x in line.split(',')]
+                    metrics.add_metric(label, unit, value)
+                except:
+                    pass
 
         if report_mem_data:
             add_memory_metrics(args, metrics)
@@ -438,7 +462,7 @@ def main():
                 print 'Verification completed successfully. ' \
                       'No actual metrics sent to CloudWatch.'
         else:
-            send_metrics(region, metrics, args.verbose)
+            metrics.send(args.verbose)
             if not args.from_cron:
                 print 'Successfully reported metrics to CloudWatch.'
     except Exception as e:
