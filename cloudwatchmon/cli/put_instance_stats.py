@@ -88,6 +88,35 @@ class MemData:
         return self.swap_total - self.swap_free
 
 
+class LoadAverage:
+    def __init__(self):
+        load_avg = self.__gather_loadavg_info()
+        self.loadavg_1min = load_avg['1min']
+        self.loadavg_5min = load_avg['5min']
+        self.loadavg_15min = load_avg['15min']
+        self.loadavg_percpu_1min = load_avg['percpu_1min']
+        self.loadavg_percpu_5min = load_avg['percpu_5min']
+        self.loadavg_percpu_15min = load_avg['percpu_15min']
+
+    @staticmethod
+    def __gather_loadavg_info():
+        loadavg_info = {}
+
+        with open('/proc/loadavg') as loadavg:
+            parsed = loadavg.read().split(' ')
+            loadavg_info['1min'] = float(parsed[0])
+            loadavg_info['5min'] = float(parsed[1])
+            loadavg_info['15min'] = float(parsed[2])
+
+        with open('/proc/cpuinfo') as cpuinfo:
+            cpu_count = cpuinfo.read().count('processor\t:')
+            loadavg_info['percpu_1min'] = loadavg_info['1min'] / cpu_count
+            loadavg_info['percpu_5min'] = loadavg_info['5min'] / cpu_count
+            loadavg_info['percpu_15min'] = loadavg_info['15min'] / cpu_count
+
+        return loadavg_info
+
+
 class Disk:
     def __init__(self, mount, file_system, total, used, avail):
         self.mount = mount
@@ -243,6 +272,15 @@ https://github.com/osiegmar/cloudwatch-mon-scripts-python
                               choices=size_units,
                               help='Specifies units for memory metrics.')
 
+    loadavg_group = parser.add_argument_group('load average')
+    loadavg_group.add_argument('--loadavg',
+                               action='store_true',
+                               help='Report load averages for 1min, 5min and 15min.')
+    loadavg_group.add_argument('--loadavg-percpu',
+                               action='store_true',
+                               help='Report load averages for 1min, 5min and 15min divided by the number of CPU cores.')
+
+
     disk_group = parser.add_argument_group('disk metrics')
     disk_group.add_argument('--disk-path',
                             metavar='PATH',
@@ -313,6 +351,17 @@ def add_memory_metrics(args, metrics):
         metrics.add_metric('SwapUsed', mem_unit_name,
                            mem.swap_used() / mem_unit_div)
 
+def add_loadavg_metrics(args, metrics):
+    loadavg = LoadAverage()
+    if args.loadavg:
+        metrics.add_metric('LoadAvg1Min', None, loadavg.loadavg_1min)
+        metrics.add_metric('LoadAvg5Min', None, loadavg.loadavg_5min)
+        metrics.add_metric('LoadAvg15Min', None, loadavg.loadavg_15min)
+    if args.loadavg_percpu:
+        metrics.add_metric('LoadAvgPerCPU1Min', None, loadavg.loadavg_percpu_1min)
+        metrics.add_metric('LoadAvgPerCPU5Min', None, loadavg.loadavg_percpu_5min)
+        metrics.add_metric('LoadAvgPerCPU15Min', None, loadavg.loadavg_percpu_15min)
+
 
 def get_disk_info(paths):
     df_out = [s.split() for s in
@@ -380,6 +429,7 @@ def validate_args(args):
     report_mem_data = args.mem_util or args.mem_used or args.mem_avail or \
         args.swap_util or args.swap_used
     report_disk_data = args.disk_path is not None
+    report_loadavg_data = args.loadavg or args.loadavg_percpu
 
     if report_disk_data:
         if not args.disk_space_util and not args.disk_space_used and \
@@ -396,11 +446,12 @@ def validate_args(args):
         raise ValueError('Metrics to report disk space are provided but '
                          'disk path is not specified.')
 
-    if not report_mem_data and not report_disk_data and not args.from_file:
+    if not report_mem_data and not report_disk_data and not args.from_file and \
+            not report_loadavg_data:
         raise ValueError('No metrics specified for collection and '
                          'submission to CloudWatch.')
 
-    return report_disk_data, report_mem_data
+    return report_disk_data, report_mem_data, report_loadavg_data
 
 
 def main():
@@ -418,7 +469,7 @@ def main():
         return 0
 
     try:
-        report_disk_data, report_mem_data = validate_args(args)
+        report_disk_data, report_mem_data, report_loadavg_data = validate_args(args)
 
         # avoid a storm of calls at the beginning of a minute
         if args.from_cron:
@@ -456,6 +507,9 @@ def main():
 
         if report_mem_data:
             add_memory_metrics(args, metrics)
+
+        if report_loadavg_data:
+            add_loadavg_metrics(args, metrics)
 
         if report_disk_data:
             add_disk_metrics(args, metrics)
