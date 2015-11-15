@@ -365,7 +365,7 @@ def add_loadavg_metrics(args, metrics):
 
 def get_disk_info(paths):
     df_out = [s.split() for s in
-              os.popen('/bin/df -k -l -P ' +
+              os.popen('/bin/df -k -P ' +
                        ' '.join(paths)).read().splitlines()]
     disks = []
     for line in df_out[1:]:
