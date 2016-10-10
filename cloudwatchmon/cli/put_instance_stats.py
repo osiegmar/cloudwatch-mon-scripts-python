@@ -127,14 +127,13 @@ class Disk:
 
 
 class Metrics:
-    def __init__(self, region, instance_id, instance_type, image_id,
+    def __init__(self, region, instance_type, image_id,
                  aggregated, autoscaling_group_name):
         self.names = []
         self.units = []
         self.values = []
         self.dimensions = []
         self.region = region
-        self.instance_id = instance_id
         self.instance_type = instance_type
         self.image_id = image_id
         self.aggregated = aggregated
@@ -148,9 +147,6 @@ class Metrics:
             common_dims['Filesystem'] = file_system
 
         dims = []
-
-        if self.aggregated != 'only':
-            dims.append({'InstanceId': self.instance_id})
 
         if self.autoscaling_group_name:
             dims.append({'AutoScalingGroupName': self.autoscaling_group_name})
@@ -496,7 +492,6 @@ def main():
                 print 'Autoscaling group: ' + autoscaling_group_name
 
         metrics = Metrics(region,
-                          instance_id,
                           metadata['instance-type'],
                           metadata['ami-id'],
                           args.aggregated,
