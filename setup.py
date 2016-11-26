@@ -30,6 +30,7 @@ setup(name='cloudwatchmon',
           ]
       },
       classifiers=[
+          'Programming Language :: Python :: 2 :: Only',
           'License :: OSI Approved :: Apache Software License',
           'Topic :: System :: Monitoring'
       ]
