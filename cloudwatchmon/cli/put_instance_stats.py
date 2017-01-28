@@ -296,17 +296,16 @@ https://github.com/osiegmar/cloudwatch-mon-scripts-python
     disk_group.add_argument('--disk-space-avail',
                             action='store_true',
                             help='Reports available disk space in gigabytes.')
-    disk_group.add_argument('--disk-inode-util',
-                            action='store_true',
-                            help='Reports disk inode utilization in percentages.')
     disk_group.add_argument('--disk-space-units',
                             metavar='UNITS',
                             default='gigabytes',
                             type=to_lower,
                             choices=size_units,
                             help='Specifies units for disk space metrics.')
+     disk_group.add_argument('--disk-inode-util',
+                            action='store_true',
+                            help='Reports disk inode utilization in percentages.')
 
-    
 
     exclusive_group = parser.add_mutually_exclusive_group()
     exclusive_group.add_argument('--from-cron',
@@ -369,7 +368,8 @@ def add_loadavg_metrics(args, metrics):
         metrics.add_metric('LoadAvgPerCPU15Min', None, loadavg.loadavg_percpu_15min)
 
 
-def get_disk_info(paths):
+def get_disk_info(args):
+    paths = args.disk_path
     df_out = [s.split() for s in
               os.popen('/bin/df -k -P ' +
                        ' '.join(paths)).read().splitlines()]
@@ -381,6 +381,10 @@ def get_disk_info(paths):
         used = int(line[2]) * 1024
         avail = int(line[3]) * 1024
         disks.append(Disk(mount, file_system, total, used, avail, 0))
+    
+    #Gather inode utilization if it is requested
+    if not args.disk_inode_util:
+        return disks
 
     df_inode_out = [s.split() for s in
                     os.popen('/bin/df -i -k -P ' +
@@ -400,7 +404,7 @@ def get_disk_info(paths):
 def add_disk_metrics(args, metrics):
     disk_unit_name = SIZE_UNITS_CFG[args.disk_space_units]['name']
     disk_unit_div = float(SIZE_UNITS_CFG[args.disk_space_units]['div'])
-    disks = get_disk_info(args.disk_path)
+    disks = get_disk_info(args)
     for disk in disks:
         if args.disk_space_util:
             metrics.add_metric('DiskSpaceUtilization', 'Percent',
