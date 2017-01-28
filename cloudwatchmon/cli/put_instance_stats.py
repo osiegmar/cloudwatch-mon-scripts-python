@@ -118,12 +118,13 @@ class LoadAverage:
 
 
 class Disk:
-    def __init__(self, mount, file_system, total, used, avail):
+    def __init__(self, mount, file_system, total, used, avail, inode_util):
         self.mount = mount
         self.file_system = file_system
         self.used = used
         self.avail = avail
         self.util = 100.0 * used / total if total > 0 else 0
+        self.inode_util = inode_util
 
 
 class Metrics:
@@ -301,6 +302,10 @@ https://github.com/osiegmar/cloudwatch-mon-scripts-python
                             type=to_lower,
                             choices=size_units,
                             help='Specifies units for disk space metrics.')
+     disk_group.add_argument('--disk-inode-util',
+                            action='store_true',
+                            help='Reports disk inode utilization in percentages.')
+
 
     exclusive_group = parser.add_mutually_exclusive_group()
     exclusive_group.add_argument('--from-cron',
@@ -363,7 +368,8 @@ def add_loadavg_metrics(args, metrics):
         metrics.add_metric('LoadAvgPerCPU15Min', None, loadavg.loadavg_percpu_15min)
 
 
-def get_disk_info(paths):
+def get_disk_info(args):
+    paths = args.disk_path
     df_out = [s.split() for s in
               os.popen('/bin/df -k -P ' +
                        ' '.join(paths)).read().splitlines()]
@@ -374,14 +380,31 @@ def get_disk_info(paths):
         total = int(line[1]) * 1024
         used = int(line[2]) * 1024
         avail = int(line[3]) * 1024
-        disks.append(Disk(mount, file_system, total, used, avail))
+        disks.append(Disk(mount, file_system, total, used, avail, 0))
+    
+    #Gather inode utilization if it is requested
+    if not args.disk_inode_util:
+        return disks
+
+    df_inode_out = [s.split() for s in
+                    os.popen('/bin/df -i -k -P ' +
+                             ' '.join(paths)).read().splitlines()]
+    disks_inode_util = []
+    for line in df_inode_out[1:]:
+        used = float(line[2])
+        total = float(line[1])
+        inode_util_val = 100.0 * used / total if total > 0 else 0
+        disks_inode_util.append(inode_util_val) 
+
+    for index, disk in enumerate(disks):
+        disk.inode_util = disks_inode_util[index]
     return disks
 
 
 def add_disk_metrics(args, metrics):
     disk_unit_name = SIZE_UNITS_CFG[args.disk_space_units]['name']
     disk_unit_div = float(SIZE_UNITS_CFG[args.disk_space_units]['div'])
-    disks = get_disk_info(args.disk_path)
+    disks = get_disk_info(args)
     for disk in disks:
         if args.disk_space_util:
             metrics.add_metric('DiskSpaceUtilization', 'Percent',
@@ -394,6 +417,10 @@ def add_disk_metrics(args, metrics):
             metrics.add_metric('DiskSpaceAvailable', disk_unit_name,
                                disk.avail / disk_unit_div,
                                disk.mount, disk.file_system)
+        if args.disk_inode_util:
+            metrics.add_metric('InodeUtilization', 'Percent',
+                               disk.inode_util, disk.mount, disk.file_system)
+            
 
 
 def add_static_file_metrics(args, metrics):
@@ -433,7 +460,7 @@ def validate_args(args):
 
     if report_disk_data:
         if not args.disk_space_util and not args.disk_space_used and \
-                not args.disk_space_avail:
+                not args.disk_space_avail and not args.disk_inode_util:
             raise ValueError('Disk path is provided but metrics to report '
                              'disk space are not specified.')
 
@@ -442,7 +469,7 @@ def validate_args(args):
                 raise ValueError('Disk file path ' + path +
                                  ' does not exist or cannot be accessed.')
     elif args.disk_space_util or args.disk_space_used or \
-            args.disk_space_avail:
+            args.disk_space_avail or args.disk_inode_util:
         raise ValueError('Metrics to report disk space are provided but '
                          'disk path is not specified.')
 
