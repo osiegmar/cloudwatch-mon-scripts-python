@@ -302,7 +302,7 @@ https://github.com/osiegmar/cloudwatch-mon-scripts-python
                             type=to_lower,
                             choices=size_units,
                             help='Specifies units for disk space metrics.')
-     disk_group.add_argument('--disk-inode-util',
+    disk_group.add_argument('--disk-inode-util',
                             action='store_true',
                             help='Reports disk inode utilization in percentages.')
 
