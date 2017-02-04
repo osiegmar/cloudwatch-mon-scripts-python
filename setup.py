@@ -23,14 +23,20 @@ setup(name='cloudwatchmon',
       keywords="monitoring cloudwatch amazon web services aws ec2",
       zip_safe=True,
       packages=find_packages(),
-      install_requires=['boto>=2.33.0','argparse'],
+      install_requires=['boto>=2.33.0','argparse', 'six'],
       entry_points={'console_scripts': [
           'mon-get-instance-stats.py=cloudwatchmon.cli.get_instance_stats:main',
           'mon-put-instance-stats.py=cloudwatchmon.cli.put_instance_stats:main',
           ]
       },
       classifiers=[
-          'Programming Language :: Python :: 2 :: Only',
+          'Programming Language :: Python :: 2',
+          'Programming Language :: Python :: 2.6',
+          'Programming Language :: Python :: 2.7',
+          'Programming Language :: Python :: 3',
+          'Programming Language :: Python :: 3.3',
+          'Programming Language :: Python :: 3.4',
+          'Programming Language :: Python :: 3.5',
           'License :: OSI Approved :: Apache Software License',
           'Topic :: System :: Monitoring'
       ]

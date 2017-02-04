@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import absolute_import
+from __future__ import print_function
 import boto
 import boto.utils
 import hashlib
@@ -43,9 +45,9 @@ class FileCache:
     def __call__(self, *args, **kwargs):
         sig = ":".join([VERSION, str(self.fnc.__name__), str(args), str(kwargs)])
 
+        hashed = hashlib.md5(sig.encode('utf-8')).hexdigest()
         filename = os.path.join(META_DATA_CACHE_DIR, '{0}-{1}.bin'
-                                .format(self.CLIENT_NAME,
-                                        hashlib.md5(sig).hexdigest()))
+                                .format(self.CLIENT_NAME, hashed))
 
         if os.path.exists(filename):
             mtime = os.path.getmtime(filename)
@@ -56,7 +58,7 @@ class FileCache:
 
         tmp = self.fnc(*args, **kwargs)
         with open(filename, 'wb') as f:
-            os.chmod(filename, 0600)
+            os.chmod(filename, 0o600)
             pickle.dump(tmp, f)
 
         return tmp
@@ -66,7 +68,7 @@ def log_error(message, use_syslog):
     if use_syslog:
         syslog.syslog(syslog.LOG_ERR, message)
     else:
-        print >> sys.stderr, 'ERROR: ' + message
+        print('ERROR: ' + message, file=sys.stderr)
 
 
 @FileCache
