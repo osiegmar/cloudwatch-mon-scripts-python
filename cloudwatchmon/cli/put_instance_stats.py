@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import print_function
 from cloudwatchmon.cloud_watch_client import *
 
 import argparse
@@ -183,7 +184,7 @@ class Metrics:
 
         size = len(self.names)
 
-        for idx_start in xrange(0, size, AWS_LIMIT_METRICS_SIZE):
+        for idx_start in range(0, size, AWS_LIMIT_METRICS_SIZE):
             idx_end = idx_start + AWS_LIMIT_METRICS_SIZE
             response = conn.put_metric_data('System/Linux',
                                             self.names[idx_start:idx_end],
@@ -282,7 +283,6 @@ https://github.com/osiegmar/cloudwatch-mon-scripts-python
                                action='store_true',
                                help='Report load averages for 1min, 5min and 15min divided by the number of CPU cores.')
 
-
     disk_group = parser.add_argument_group('disk metrics')
     disk_group.add_argument('--disk-path',
                             metavar='PATH',
@@ -307,13 +307,11 @@ https://github.com/osiegmar/cloudwatch-mon-scripts-python
                             action='store_true',
                             help='Reports disk inode utilization in percentages.')
 
-
     process_group = parser.add_argument_group('process metrics')
     process_group.add_argument('--process-name',
                                metavar='PROCNAME',
                                action='append',
                                help='Report CPU and Memory utilization metrics of processes.')
-
 
     exclusive_group = parser.add_mutually_exclusive_group()
     exclusive_group.add_argument('--from-cron',
@@ -364,6 +362,7 @@ def add_memory_metrics(args, metrics):
         metrics.add_metric('SwapUsed', mem_unit_name,
                            mem.swap_used() / mem_unit_div)
 
+
 def add_loadavg_metrics(args, metrics):
     loadavg = LoadAverage()
     if args.loadavg:
@@ -389,8 +388,8 @@ def get_disk_info(args):
         used = int(line[2]) * 1024
         avail = int(line[3]) * 1024
         disks.append(Disk(mount, file_system, total, used, avail, 0))
-    
-    #Gather inode utilization if it is requested
+
+    # Gather inode utilization if it is requested
     if not args.disk_inode_util:
         return disks
 
@@ -402,7 +401,7 @@ def get_disk_info(args):
         used = float(line[2])
         total = float(line[1])
         inode_util_val = 100.0 * used / total if total > 0 else 0
-        disks_inode_util.append(inode_util_val) 
+        disks_inode_util.append(inode_util_val)
 
     for index, disk in enumerate(disks):
         disk.inode_util = disks_inode_util[index]
@@ -428,7 +427,6 @@ def add_disk_metrics(args, metrics):
         if args.disk_inode_util:
             metrics.add_metric('InodeUtilization', 'Percent',
                                disk.inode_util, disk.mount, disk.file_system)
-            
 
 def add_process_metrics(args, metrics):
     process_names = args.process_name
@@ -452,7 +450,7 @@ def add_static_file_metrics(args, metrics):
                 (label, unit, value) = [x.strip() for x in line.split(',')]
                 metrics.add_metric(label, unit, value)
             except ValueError:
-                print 'Ignore unparseable metric: "' + line + '"'
+                print('Ignore unparseable metric: "' + line + '"')
                 pass
 
 
@@ -496,8 +494,8 @@ def validate_args(args):
         raise ValueError('Metrics to report disk space are provided but '
                          'disk path is not specified.')
 
-    if not report_mem_data and not report_disk_data and not args.from_file and \
-            not report_loadavg_data:
+    if not report_mem_data and not report_disk_data and \
+            not args.from_file and not report_loadavg_data:
         raise ValueError('No metrics specified for collection and '
                          'submission to CloudWatch.')
 
@@ -515,24 +513,25 @@ def main():
     args = parser.parse_args()
 
     if args.version:
-        print CLIENT_NAME + ' version ' + VERSION
+        print(CLIENT_NAME + ' version ' + VERSION)
         return 0
 
     try:
-        report_disk_data, report_mem_data, report_loadavg_data, report_process_data = validate_args(args)
+        report_disk_data, report_mem_data, report_loadavg_data, report_process_data = \
+            validate_args(args)
 
         # avoid a storm of calls at the beginning of a minute
         if args.from_cron:
             time.sleep(random.randint(0, 19))
 
         if args.verbose:
-            print 'Working in verbose mode'
-            print 'Boto-Version: ' + boto.__version__
+            print('Working in verbose mode')
+            print('Boto-Version: ' + boto.__version__)
 
         metadata = get_metadata()
 
         if args.verbose:
-            print 'Instance metadata: ' + str(metadata)
+            print('Instance metadata: ' + str(metadata))
 
         region = metadata['placement']['availability-zone'][:-1]
         instance_id = metadata['instance-id']
@@ -543,7 +542,7 @@ def main():
                                                                 args.verbose)
 
             if args.verbose:
-                print 'Autoscaling group: ' + autoscaling_group_name
+                print('Autoscaling group: ' + autoscaling_group_name)
 
         metrics = Metrics(region,
                           instance_id,
@@ -568,16 +567,16 @@ def main():
             add_process_metrics(args, metrics)
 
         if args.verbose:
-            print 'Request:\n' + str(metrics)
+            print('Request:\n' + str(metrics))
 
         if args.verify:
             if not args.from_cron:
-                print 'Verification completed successfully. ' \
-                      'No actual metrics sent to CloudWatch.'
+                print('Verification completed successfully. '
+                      'No actual metrics sent to CloudWatch.')
         else:
             metrics.send(args.verbose)
             if not args.from_cron:
-                print 'Successfully reported metrics to CloudWatch.'
+                print('Successfully reported metrics to CloudWatch.')
     except Exception as e:
         log_error(str(e), args.from_cron)
         return 1

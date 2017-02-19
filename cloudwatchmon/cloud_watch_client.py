@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import print_function
 import boto
 import boto.utils
 import hashlib
@@ -56,7 +57,7 @@ class FileCache:
 
         tmp = self.fnc(*args, **kwargs)
         with open(filename, 'wb') as f:
-            os.chmod(filename, 0600)
+            os.chmod(filename, 0o600)
             pickle.dump(tmp, f)
 
         return tmp
@@ -66,7 +67,7 @@ def log_error(message, use_syslog):
     if use_syslog:
         syslog.syslog(syslog.LOG_ERR, message)
     else:
-        print >> sys.stderr, 'ERROR: ' + message
+        print('ERROR: ' + message, file=sys.stderr)
 
 
 @FileCache

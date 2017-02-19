@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import print_function
 from cloudwatchmon.cloud_watch_client import *
 
 import argparse
@@ -76,17 +77,17 @@ def print_metric_stats(region, instance_id, namespace, metric, title,
                                          ['Average', 'Maximum', 'Minimum'],
                                          dims)
 
-    print title
+    print(title)
 
     if metrics:
         max_val = max(m['Maximum'] for m in metrics)
         min_val = min(m['Minimum'] for m in metrics)
         avg_val = sum(m['Average'] for m in metrics) / float(len(metrics))
 
-        print "    Average: {0:.2f}%, Minimum: {1:.2f}%, Maximum: {2:.2f}%\n" \
-            .format(avg_val, min_val, max_val)
+        print("    Average: {0:.2f}%, Minimum: {1:.2f}%, Maximum: {2:.2f}%\n"
+              .format(avg_val, min_val, max_val))
     else:
-        print "    Average: N/A, Minimum: N/A, Maximum: N/A\n"
+        print("    Average: N/A, Minimum: N/A, Maximum: N/A\n")
 
 
 def print_filesystem_stats(region, instance_id, namespace, metric, title,
@@ -117,21 +118,21 @@ def main():
     args = parser.parse_args()
 
     if args.version:
-        print CLIENT_NAME + ' version ' + VERSION
+        print(CLIENT_NAME + ' version ' + VERSION)
         return 0
 
     try:
         metadata = get_metadata()
 
         if args.verbose:
-            print 'Instance metadata: ' + str(metadata)
+            print('Instance metadata: ' + str(metadata))
 
         region = metadata['placement']['availability-zone'][:-1]
         instance_id = metadata['instance-id']
 
         unit = 'hours' if args.recent_hours > 1 else 'hour'
-        print 'Instance {0} statistics for the last {1} {2}.\n'\
-            .format(instance_id, args.recent_hours, unit)
+        print('Instance {0} statistics for the last {1} {2}.\n'
+              .format(instance_id, args.recent_hours, unit))
 
         print_metric_stats(region, instance_id,
                            'AWS/EC2',
