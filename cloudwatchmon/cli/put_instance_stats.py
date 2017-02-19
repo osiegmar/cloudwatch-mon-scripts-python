@@ -30,6 +30,7 @@ import random
 import re
 import sys
 import time
+import subprocess
 
 CLIENT_NAME = 'CloudWatch-PutInstanceData'
 FileCache.CLIENT_NAME = CLIENT_NAME
@@ -306,6 +307,12 @@ https://github.com/osiegmar/cloudwatch-mon-scripts-python
                             action='store_true',
                             help='Reports disk inode utilization in percentages.')
 
+    process_group = parser.add_argument_group('process metrics')
+    process_group.add_argument('--process-name',
+                               metavar='PROCNAME',
+                               action='append',
+                               help='Report CPU and Memory utilization metrics of processes.')
+
     exclusive_group = parser.add_mutually_exclusive_group()
     exclusive_group.add_argument('--from-cron',
                                  action='store_true',
@@ -421,6 +428,20 @@ def add_disk_metrics(args, metrics):
             metrics.add_metric('InodeUtilization', 'Percent',
                                disk.inode_util, disk.mount, disk.file_system)
 
+def add_process_metrics(args, metrics):
+    process_names = args.process_name
+    for process_name in process_names:
+        processes = subprocess.Popen(["ps", "axco", "command,pcpu,pmem"], stdout=subprocess.PIPE)
+        total_cpu = 0.0
+        total_mem = 0.0
+        for line in processes.stdout:
+            if re.search(process_name, line):
+                out = line.split()
+                total_cpu += float(out[1])
+                total_mem += float(out[2])
+        metrics.add_metric(process_name+'-CpuUtilization', 'Percent', total_cpu)
+        metrics.add_metric(process_name+'-MemoryUtilization', 'Percent', total_mem)
+
 
 def add_static_file_metrics(args, metrics):
     with open(args.from_file[0]) as f:
@@ -456,6 +477,7 @@ def validate_args(args):
         args.swap_util or args.swap_used
     report_disk_data = args.disk_path is not None
     report_loadavg_data = args.loadavg or args.loadavg_percpu
+    report_process_data = args.process_name is not None
 
     if report_disk_data:
         if not args.disk_space_util and not args.disk_space_used and \
@@ -477,7 +499,7 @@ def validate_args(args):
         raise ValueError('No metrics specified for collection and '
                          'submission to CloudWatch.')
 
-    return report_disk_data, report_mem_data, report_loadavg_data
+    return report_disk_data, report_mem_data, report_loadavg_data, report_process_data
 
 
 def main():
@@ -495,7 +517,7 @@ def main():
         return 0
 
     try:
-        report_disk_data, report_mem_data, report_loadavg_data = \
+        report_disk_data, report_mem_data, report_loadavg_data, report_process_data = \
             validate_args(args)
 
         # avoid a storm of calls at the beginning of a minute
@@ -540,6 +562,9 @@ def main():
 
         if report_disk_data:
             add_disk_metrics(args, metrics)
+
+        if report_process_data:
+            add_process_metrics(args, metrics)
 
         if args.verbose:
             print('Request:\n' + str(metrics))
