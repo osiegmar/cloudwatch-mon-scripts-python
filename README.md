@@ -1,6 +1,8 @@
 cloudwatch-mon-scripts-python
 =============================
 
+[![PyPI version](https://badge.fury.io/py/cloudwatchmon.svg)](https://badge.fury.io/py/cloudwatchmon)
+
 Linux monitoring scripts for CloudWatch.
 
 
