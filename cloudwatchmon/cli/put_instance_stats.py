@@ -311,9 +311,8 @@ https://github.com/osiegmar/cloudwatch-mon-scripts-python
     process_group = parser.add_argument_group('process metrics')
     process_group.add_argument('--process-name',
                                metavar='PROCNAME',
-                               default='init',
-                               type=to_lower,
-                               help='Report CPU and Memory metrics of comma-sperated processes.')
+                               action='append',
+                               help='Report CPU and Memory utilization metrics of processes.')
 
 
     exclusive_group = parser.add_mutually_exclusive_group()
@@ -432,7 +431,7 @@ def add_disk_metrics(args, metrics):
             
 
 def add_process_metrics(args, metrics):
-    process_names = args.process_name.split(',')
+    process_names = args.process_name
     for process_name in process_names:
         processes = subprocess.Popen(["ps", "axco", "command,pcpu,pmem"], stdout=subprocess.PIPE)
         total_cpu = 0.0
