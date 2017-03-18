@@ -44,9 +44,9 @@ class FileCache:
     def __call__(self, *args, **kwargs):
         sig = ":".join([VERSION, str(self.fnc.__name__), str(args), str(kwargs)])
 
+        sig_hash = hashlib.md5(sig.encode('utf-8')).hexdigest()
         filename = os.path.join(META_DATA_CACHE_DIR, '{0}-{1}.bin'
-                                .format(self.CLIENT_NAME,
-                                        hashlib.md5(sig).hexdigest()))
+                                .format(self.CLIENT_NAME, sig_hash))
 
         if os.path.exists(filename):
             mtime = os.path.getmtime(filename)
