@@ -71,7 +71,7 @@ def print_metric_stats(region, instance_id, namespace, metric, title,
     start_time = end_time - datetime.timedelta(hours=recent_hours)
     dims = {'InstanceId': instance_id}
     if xdims:
-        dims = dict(dims.items() + xdims.items())
+        dims.update(xdims)
     metrics = conn.get_metric_statistics(300, start_time, end_time,
                                          metric, namespace,
                                          ['Average', 'Maximum', 'Minimum'],

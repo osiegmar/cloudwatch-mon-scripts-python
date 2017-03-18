@@ -170,7 +170,9 @@ class Metrics:
             self.names.append(name)
             self.units.append(unit)
             self.values.append(value)
-            self.dimensions.append(dict(common_dims.items() + dim.items()))
+            metric_dims = common_dims.copy()
+            metric_dims.update(dim)
+            self.dimensions.append(metric_dims)
 
     def send(self, verbose):
         boto_debug = 2 if verbose else 0
