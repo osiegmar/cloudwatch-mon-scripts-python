@@ -46,20 +46,22 @@ Configuration
 To allow an EC2 instance to read and post metric data to Amazon CloudWatch,
 this IAM policy is required:
 
+```json
+{
+  "Statement": [
     {
-      "Statement": [
-        {
-          "Action": [
-            "cloudwatch:ListMetrics",
-            "cloudwatch:GetMetricStatistics",
-            "cloudwatch:PutMetricData",
-            "autoscaling:DescribeAutoScalingInstances"
-          ],
-          "Effect": "Allow",
-          "Resource": "*"
-        }
-      ]
+      "Action": [
+        "cloudwatch:ListMetrics",
+        "cloudwatch:GetMetricStatistics",
+        "cloudwatch:PutMetricData",
+        "autoscaling:DescribeAutoScalingInstances"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
     }
+  ]
+}
+```
 
 If the policy is configured via an IAM role that is assigned to the EC2
 server this script runs on, you're done.
@@ -67,15 +69,18 @@ server this script runs on, you're done.
 Otherwise you can configure the policy for a user account and export
 the credentials before running the script:
 
-    export AWS_ACCESS_KEY_ID=[Your AWS Access Key ID]
-    export AWS_SECRET_ACCESS_KEY=[Your AWS Secret Access Key]
+```sh
+export AWS_ACCESS_KEY_ID=[Your AWS Access Key ID]
+export AWS_SECRET_ACCESS_KEY=[Your AWS Secret Access Key]
+```
 
 Third option is to create a _~/.boto_ file with this content:
 
-    [Credentials]
-    aws_access_key_id = Your AWS Access Key ID
-    aws_secret_access_key = Your AWS Secret Access Key
-
+```
+[Credentials]
+aws_access_key_id = Your AWS Access Key ID
+aws_secret_access_key = Your AWS Secret Access Key
+```
 
 Copyright
 ---------
