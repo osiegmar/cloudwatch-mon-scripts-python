@@ -36,7 +36,7 @@ Optionally create a virtual environment and activate it. Then just run
 
 For script usage, run:
 
-    mon-put-instance-stats.py --help
+    mon-put-instance-stats --help
 
 
 Examples
@@ -44,15 +44,15 @@ Examples
 
 To perform a simple test run without posting data to Amazon CloudWatch:
 
-    mon-put-instance-stats.py --mem-util --verify --verbose
+    mon-put-instance-stats --mem-util --verify --verbose
 
 Report memory and disk space utilization to Amazon CloudWatch:
 
-    mon-put-instance-stats.py --mem-util --disk-space-util --disk-path=/
+    mon-put-instance-stats --mem-util --disk-space-util --disk-path=/
 
 To get utilization statistics for the last 12 hours:
 
-    mon-get-instance-stats.py --recent-hours=12
+    mon-get-instance-stats --recent-hours=12
 
 
 Configuration
