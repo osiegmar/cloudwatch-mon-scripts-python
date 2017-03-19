@@ -25,8 +25,8 @@ setup(name='cloudwatchmon',
       packages=find_packages(),
       install_requires=['boto>=2.33.0', 'argparse'],
       entry_points={'console_scripts': [
-          'mon-get-instance-stats.py=cloudwatchmon.cli.get_instance_stats:main',
-          'mon-put-instance-stats.py=cloudwatchmon.cli.put_instance_stats:main',
+          'mon-get-instance-stats=cloudwatchmon.cli.get_instance_stats:main',
+          'mon-put-instance-stats=cloudwatchmon.cli.put_instance_stats:main',
           ]
       },
       classifiers=[
