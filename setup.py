@@ -30,6 +30,12 @@ setup(name='cloudwatchmon',
           ]
       },
       classifiers=[
+          'Development Status :: 5 - Production/Stable',
+          'Environment :: Console',
+          'Intended Audience :: System Administrators',
+          'License :: OSI Approved :: Apache Software License',
+          'Natural Language :: English',
+          'Operating System :: POSIX :: Linux',
           'Programming Language :: Python :: 2',
           'Programming Language :: Python :: 2.6',
           'Programming Language :: Python :: 2.7',
@@ -37,7 +43,6 @@ setup(name='cloudwatchmon',
           'Programming Language :: Python :: 3.3',
           'Programming Language :: Python :: 3.4',
           'Programming Language :: Python :: 3.5',
-          'License :: OSI Approved :: Apache Software License',
           'Topic :: System :: Monitoring'
       ]
       )
