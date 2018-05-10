@@ -174,11 +174,11 @@ class Metrics:
             metric_dims.update(dim)
             self.dimensions.append(metric_dims)
 
-    def send(self, verbose):
+    def send(self, verbose, awsProfile):
         boto_debug = 2 if verbose else 0
 
         # TODO add timeout
-        conn = boto.ec2.cloudwatch.connect_to_region(self.region,
+        conn = boto.ec2.cloudwatch.connect_to_region(self.region, profile_name=awsProfile,
                                                      debug=boto_debug)
 
         if not conn:
@@ -338,6 +338,9 @@ https://github.com/osiegmar/cloudwatch-mon-scripts-python
     parser.add_argument('--version',
                         action='store_true',
                         help='Displays the version number and exits.')
+    parser.add_argument('--aws-profile-name',
+                        action='store',
+                        help='Use AWS profile of this name when posting to CloudWatch.')
 
     return parser
 
@@ -569,12 +572,17 @@ def main():
         if args.verbose:
             print('Request:\n' + str(metrics))
 
+        # Check for AWS profile
+        awsProfile = None
+        if args.aws_profile_name:
+            awsProfile = args.aws_profile_name
+
         if args.verify:
             if not args.from_cron:
                 print('Verification completed successfully. '
                       'No actual metrics sent to CloudWatch.')
         else:
-            metrics.send(args.verbose)
+            metrics.send(args.verbose, awsProfile)
             if not args.from_cron:
                 print('Successfully reported metrics to CloudWatch.')
     except Exception as e:
