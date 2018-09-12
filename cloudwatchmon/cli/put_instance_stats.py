@@ -51,6 +51,7 @@ class MemData:
         self.mem_total = mem_info['MemTotal']
         self.mem_free = mem_info['MemFree']
         self.mem_cached = mem_info['Cached']
+        self.mem_slab = mem_info['Slab']
         self.mem_buffers = mem_info['Buffers']
         self.swap_total = mem_info['SwapTotal']
         self.swap_free = mem_info['SwapFree']
@@ -76,7 +77,7 @@ class MemData:
     def mem_avail(self):
         mem_avail = self.mem_free
         if not self.mem_used_incl_cache_buff:
-            mem_avail += self.mem_cached + self.mem_buffers
+            mem_avail += self.mem_cached + self.mem_buffers + self.mem_slab
 
         return mem_avail
 
