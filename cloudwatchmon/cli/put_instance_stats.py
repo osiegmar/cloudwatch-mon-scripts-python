@@ -441,7 +441,7 @@ def add_process_metrics(args, metrics):
                 out = line.split()
                 total_cpu += float(out[1])
                 total_mem += float(out[2])
-        metrics.add_metric(process_name+'-Count', 'Count', total_cpu)
+        metrics.add_metric(process_name+'-Count', 'Count', total_cnt)
         metrics.add_metric(process_name+'-CpuUtilization', 'Percent', total_cpu)
         metrics.add_metric(process_name+'-MemoryUtilization', 'Percent', total_mem)
 
