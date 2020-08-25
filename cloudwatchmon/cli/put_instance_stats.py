@@ -437,7 +437,7 @@ def add_process_metrics(args, metrics):
         total_mem = 0.0
         for line in processes.stdout:
             if re.search(process_name, line):
-                total_cnt++
+                total_cnt += 1
                 out = line.split()
                 total_cpu += float(out[1])
                 total_mem += float(out[2])
