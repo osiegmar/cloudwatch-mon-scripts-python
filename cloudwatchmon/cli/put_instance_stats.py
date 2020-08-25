@@ -495,7 +495,8 @@ def validate_args(args):
                          'disk path is not specified.')
 
     if not report_mem_data and not report_disk_data and \
-            not args.from_file and not report_loadavg_data:
+            not args.from_file and not report_loadavg_data and \
+            not report_process_data:
         raise ValueError('No metrics specified for collection and '
                          'submission to CloudWatch.')
 
