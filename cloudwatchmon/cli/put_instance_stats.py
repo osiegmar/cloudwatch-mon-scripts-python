@@ -310,7 +310,7 @@ https://github.com/osiegmar/cloudwatch-mon-scripts-python
     process_group.add_argument('--process-name',
                                metavar='PROCNAME',
                                action='append',
-                               help='Report CPU and Memory utilization metrics of processes.')
+                               help='Report process count, CPU utilization, and memory utilization metrics for a process.')
 
     exclusive_group = parser.add_mutually_exclusive_group()
     exclusive_group.add_argument('--from-cron',
@@ -432,13 +432,16 @@ def add_process_metrics(args, metrics):
     process_names = args.process_name
     for process_name in process_names:
         processes = subprocess.Popen(["ps", "axco", "command,pcpu,pmem"], stdout=subprocess.PIPE)
+        total_cnt = 0
         total_cpu = 0.0
         total_mem = 0.0
         for line in processes.stdout:
             if re.search(process_name, line):
+                total_cnt += 1
                 out = line.split()
                 total_cpu += float(out[1])
                 total_mem += float(out[2])
+        metrics.add_metric(process_name+'-Count', 'Count', total_cnt)
         metrics.add_metric(process_name+'-CpuUtilization', 'Percent', total_cpu)
         metrics.add_metric(process_name+'-MemoryUtilization', 'Percent', total_mem)
 
