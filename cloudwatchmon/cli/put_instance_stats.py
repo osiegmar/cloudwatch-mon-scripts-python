@@ -50,6 +50,7 @@ class MemData:
         mem_info = self.__gather_mem_info()
         self.mem_total = mem_info['MemTotal']
         self.mem_free = mem_info['MemFree']
+        self.mem_available = mem_info.get('MemAvailable') # Linux >= 3.14
         self.mem_cached = mem_info['Cached']
         self.mem_buffers = mem_info['Buffers']
         self.swap_total = mem_info['SwapTotal']
@@ -74,9 +75,14 @@ class MemData:
         return self.mem_total - self.mem_avail()
 
     def mem_avail(self):
-        mem_avail = self.mem_free
-        if not self.mem_used_incl_cache_buff:
-            mem_avail += self.mem_cached + self.mem_buffers
+        # Linux 3.14 kernel added 'MemAvailable' to /proc/meminfo
+        if self.mem_available:
+            mem_avail = self.mem_available
+        else:
+            mem_avail = self.mem_free + self.mem_cached + self.mem_buffers
+
+        if self.mem_used_incl_cache_buff:
+            mem_avail -= self.mem_cached + self.mem_buffers        
 
         return mem_avail
 
