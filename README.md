@@ -3,6 +3,19 @@ cloudwatch-mon-scripts-python
 
 [![PyPI version](https://badge.fury.io/py/cloudwatchmon.svg)](https://badge.fury.io/py/cloudwatchmon)
 
+> [!WARNING]
+> **This project is archived and no longer maintained.**
+>
+> I haven't personally used these scripts in nearly a decade and am no longer
+> in a position to maintain them. The codebase still targets Python 2.6+ and
+> the legacy `boto` SDK (not `boto3`), and will not receive further updates,
+> fixes, or releases.
+>
+> The repository remains available in read-only form for reference, and the
+> existing `cloudwatchmon` package stays on PyPI. If you'd like to continue
+> the work, you are very welcome to fork it — a modernized version targeting
+> Python 3 and `boto3` would be the right path forward.
+
 Linux monitoring scripts for the [AWS CloudWatch Service](https://aws.amazon.com/de/cloudwatch/).
 
 Initially, this project was created, because the
